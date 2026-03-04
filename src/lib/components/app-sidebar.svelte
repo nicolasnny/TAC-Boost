@@ -3,6 +3,7 @@
 	import FileQuestionIcon from '@lucide/svelte/icons/file-question';
 	import UploadIcon from '@lucide/svelte/icons/upload';
 	import UsersIcon from '@lucide/svelte/icons/users';
+	import ClipboardListIcon from '@lucide/svelte/icons/clipboard-list';
 	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 
 	// Menu items.
@@ -21,6 +22,11 @@
 			title: 'Utilisateurs',
 			url: '/admin/users',
 			icon: UsersIcon
+		},
+		{
+			title: 'Sessions',
+			url: '/admin/sessions',
+			icon: ClipboardListIcon
 		},
 		{
 			title: 'Import JSON',

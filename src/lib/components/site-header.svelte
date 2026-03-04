@@ -27,6 +27,8 @@
 				}
 			} else if (segments[1] === 'import') {
 				crumbs.push({ label: 'Import JSON', href: '/admin/import' });
+			} else if (segments[1] === 'sessions') {
+				crumbs.push({ label: 'Sessions', href: '/admin/sessions' });
 			}
 		}
 		return crumbs;
