@@ -214,7 +214,7 @@
 					}}
 				>
 					<div class="flex items-center justify-between gap-2 sm:gap-3">
-						{#each pinDigits as digit, index}
+						{#each pinDigits as digit, index (index)}
 							<input
 								type="text"
 								inputmode="numeric"

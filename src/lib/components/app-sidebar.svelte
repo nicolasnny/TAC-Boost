@@ -61,8 +61,8 @@
 			<Sidebar.GroupLabel>Application</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
-					{#each items as item}
-						<Sidebar.MenuItem key={item.url}>
+					{#each items as item (item.url)}
+						<Sidebar.MenuItem>
 							<Sidebar.MenuButton isActive={$page.url.pathname === item.url}>
 								{#snippet child({ props }: { props: Record<string, unknown> })}
 									<a href={item.url} {...props}>

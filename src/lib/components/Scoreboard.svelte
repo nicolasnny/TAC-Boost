@@ -24,11 +24,7 @@
 	let isRefreshingAfterReset = $state(false);
 
 	// Carousel state
-	let currentSlide = $state(0);
-
-	$effect(() => {
-		currentSlide = initialMode === 'tresorerie' ? 1 : 0;
-	});
+	let currentSlide = $state(initialMode === 'tresorerie' ? 1 : 0);
 	let touchStartX = $state(0);
 	let touchEndX = $state(0);
 	let isDragging = $state(false);
