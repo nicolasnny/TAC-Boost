@@ -219,6 +219,35 @@ export function saveScore(score: Omit<DbScore, 'id' | 'created_at'>): DbScore {
 	};
 }
 
+function formatSqliteTimestamp(date: Date): string {
+	return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+function getLeaderboardWeekWindow(now = new Date()): { weekStartAt: Date; nextResetAt: Date } {
+	const weekStartAt = new Date(now);
+	weekStartAt.setHours(0, 0, 0, 0);
+
+	// Weeks reset every Monday at 00:00 (server local timezone).
+	const daysSinceMonday = (weekStartAt.getDay() + 6) % 7;
+	weekStartAt.setDate(weekStartAt.getDate() - daysSinceMonday);
+
+	const nextResetAt = new Date(weekStartAt);
+	nextResetAt.setDate(nextResetAt.getDate() + 7);
+
+	return { weekStartAt, nextResetAt };
+}
+
+export function getLeaderboardResetInfo(now = new Date()): {
+	weekStartAt: string;
+	nextResetAt: string;
+} {
+	const { weekStartAt, nextResetAt } = getLeaderboardWeekWindow(now);
+	return {
+		weekStartAt: weekStartAt.toISOString(),
+		nextResetAt: nextResetAt.toISOString()
+	};
+}
+
 export interface LeaderboardEntry {
 	id: number;
 	user_id: string;
@@ -236,27 +265,39 @@ export function getLeaderboard(
 	examMode: 'organisationnel' | 'tresorerie',
 	limit = 20
 ): LeaderboardEntry[] {
+	const { weekStartAt } = getLeaderboardWeekWindow();
+	const weekStartSql = formatSqliteTimestamp(weekStartAt);
+
 	return getDb()
 		.prepare(
 			`
 		SELECT 
 			s.id, s.user_id, u.name as user_name, u.image as user_image,
 			s.score, s.total_questions, s.correct_answers, s.time_spent, s.created_at,
-			(SELECT COUNT(*) FROM scores s3 WHERE s3.user_id = s.user_id AND s3.exam_mode = s.exam_mode) as attempt_count
+			(
+				SELECT COUNT(*)
+				FROM scores s3
+				WHERE s3.user_id = s.user_id
+					AND s3.exam_mode = s.exam_mode
+					AND s3.created_at >= ?
+			) as attempt_count
 		FROM scores s
 		JOIN users u ON s.user_id = u.id
 		WHERE s.exam_mode = ?
+		AND s.created_at >= ?
 		AND s.id = (
 			SELECT s2.id FROM scores s2 
-			WHERE s2.user_id = s.user_id AND s2.exam_mode = s.exam_mode
-			ORDER BY s2.score DESC, s2.time_spent ASC 
+			WHERE s2.user_id = s.user_id
+				AND s2.exam_mode = s.exam_mode
+				AND s2.created_at >= ?
+			ORDER BY s2.score DESC, s2.time_spent ASC, s2.created_at ASC
 			LIMIT 1
 		)
-		ORDER BY s.score DESC, s.time_spent ASC
+		ORDER BY s.score DESC, s.time_spent ASC, s.created_at ASC
 		LIMIT ?
 	`
 		)
-		.all(examMode, limit) as LeaderboardEntry[];
+		.all(weekStartSql, examMode, weekStartSql, weekStartSql, limit) as LeaderboardEntry[];
 }
 
 export function getUserScores(userId: string, examMode?: string): DbScore[] {
